@@ -332,6 +332,15 @@ body::before {
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   transition: all 0.2s;
 }
+.product-card .card-header .pname { cursor: pointer; transition: color 0.15s; }
+.product-card .card-header .pname:active { color: var(--terra); }
+.mv-btn {
+  background: none; border: none; color: var(--text-faint);
+  font-size: 15px; width: 28px; height: 28px; cursor: pointer;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; line-height: 1; flex-shrink: 0;
+}
+.mv-btn:active { background: var(--terra-mist); color: var(--terra); }
 .product-card .card-header .del-btn:active {
   background: var(--red-light); color: var(--red);
 }
@@ -513,6 +522,21 @@ body::before {
   margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
 }
 .record-card .rc-date .rc-badge { font-weight: 500; font-size: 12px; padding: 2px 8px; border-radius: 12px; }
+.rc-del {
+  margin-left: auto; background: none; border: none; color: var(--text-faint);
+  font-size: 14px; width: 26px; height: 26px; cursor: pointer; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.rc-del:active { background: var(--red-light); color: var(--red); }
+.search-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-faint); font-size: 16px;
+  cursor: pointer; width: 28px; height: 28px; border-radius: 50%;
+  display: none; align-items: center; justify-content: center; padding: 0;
+}
+.search-clear.show { display: flex; }
+.search-clear:active { background: var(--cream-light); color: var(--text-soft); }
 .rc-badge.ok { background: var(--green-light); color: var(--green); }
 .rc-badge.diff { background: var(--red-light); color: var(--red); }
 .record-card .rc-item {
@@ -743,6 +767,7 @@ body::before {
         <div class="search-bar">
           <span class="search-icon">🔍</span>
           <input type="text" id="searchInput" placeholder="搜索商品..." oninput="onSearch()" autocomplete="off">
+          <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
         </div>
 
         <div class="snap-row">
@@ -1003,6 +1028,7 @@ try {
 let searchTerm = '';
 function onSearch() {
   searchTerm = document.getElementById('searchInput').value.trim();
+  document.getElementById('searchClear').classList.toggle('show', searchTerm !== '');
   renderInven();
 }
 
@@ -1178,15 +1204,19 @@ function renderInven() {
       return `<div class="in-group"><div class="fl">${icon} ${label}</div>
         <div class="input-stepper">
           <button class="stepper-btn minus" onclick="adjust(${i},'${field}',-1)">−</button>
-          <input type="number" placeholder="数量" value="${v}" data-i="${i}" data-f="${field}" onchange="upd(${i},'${field}',this.value)" inputmode="numeric">
+          <input type="number" placeholder="数量" value="${v}" data-i="${i}" data-f="${field}" onchange="upd(${i},'${field}',this.value)" onkeydown="if(event.key==='Enter')this.blur()" inputmode="numeric">
           <button class="stepper-btn plus" onclick="adjust(${i},'${field}',1)">+</button>
         </div></div>`;
     };
     return `<div class="product-card ${pc}" data-i="${i}" ${anim}>
       ${pt}
       <div class="card-header">
-        <span class="pname">${esc(p.name)}</span>
-        <button class="del-btn" onclick="delProd(${i})">✕</button>
+        <span class="pname" onclick="editName(${i})" title="点击重命名">${esc(p.name)} ✎</span>
+        <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
+          ${i>0?`<button class="mv-btn" onclick="moveUp(${i})" title="上移">↑</button>`:''}
+          ${i<products.length-1?`<button class="mv-btn" onclick="moveDown(${i})" title="下移">↓</button>`:''}
+          <button class="del-btn" onclick="delProd(${i})" title="删除">✕</button>
+        </div>
       </div>
       <div class="in-grid">
         ${st('早上库存','opening','🌅')}
@@ -1205,7 +1235,7 @@ function renderInven() {
           <div class="in-group"><div class="fl">📦 报损数量</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjust(${i},'loss',-1)">−</button>
-              <input type="number" placeholder="坏的过期的" value="${p.loss}" data-i="${i}" data-f="loss" onchange="upd(${i},'loss',this.value)" inputmode="numeric">
+              <input type="number" placeholder="坏的过期的" value="${p.loss}" data-i="${i}" data-f="loss" onchange="upd(${i},'loss',this.value)" onkeydown="if(event.key==='Enter')this.blur()" inputmode="numeric">
               <button class="stepper-btn plus" onclick="adjust(${i},'loss',1)">+</button>
             </div></div>
           <div class="in-group"><div class="fl">⚠️ 原因</div>
@@ -1217,19 +1247,19 @@ function renderInven() {
           <div class="in-group"><div class="fl">📉 最低库存预警</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjust(${i},'minStock',-1)">−</button>
-              <input type="number" placeholder="低于这个数要补" value="${p.minStock}" data-i="${i}" data-f="minStock" onchange="upd(${i},'minStock',this.value)" inputmode="numeric">
+              <input type="number" placeholder="低于这个数要补" value="${p.minStock}" data-i="${i}" data-f="minStock" onchange="upd(${i},'minStock',this.value)" onkeydown="if(event.key==='Enter')this.blur()" inputmode="numeric">
               <button class="stepper-btn plus" onclick="adjust(${i},'minStock',1)">+</button>
             </div></div>
           <div class="in-group"><div class="fl">💰 进货价</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjustPrice(${i},'costPrice',-1)">−</button>
-              <input type="number" placeholder="每件成本" value="${p.costPrice}" data-i="${i}" data-f="costPrice" onchange="upd(${i},'costPrice',this.value)" inputmode="decimal">
+              <input type="number" placeholder="每件成本" value="${p.costPrice}" data-i="${i}" data-f="costPrice" onchange="upd(${i},'costPrice',this.value)" onkeydown="if(event.key==='Enter')this.blur()" inputmode="decimal">
               <button class="stepper-btn plus" onclick="adjustPrice(${i},'costPrice',1)">+</button>
             </div></div>
           <div class="in-group"><div class="fl">🏷️ 零售价</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjustPrice(${i},'sellPrice',-1)">−</button>
-              <input type="number" placeholder="每件售价" value="${p.sellPrice}" data-i="${i}" data-f="sellPrice" onchange="upd(${i},'sellPrice',this.value)" inputmode="decimal">
+              <input type="number" placeholder="每件售价" value="${p.sellPrice}" data-i="${i}" data-f="sellPrice" onchange="upd(${i},'sellPrice',this.value)" onkeydown="if(event.key==='Enter')this.blur()" inputmode="decimal">
               <button class="stepper-btn plus" onclick="adjustPrice(${i},'sellPrice',1)">+</button>
             </div></div>
           <div class="in-group">
@@ -1289,7 +1319,7 @@ function renderRecords() {
       : '<span class="rc-badge diff">⚠️ 差异 '+td+'</span>';
     const lt = tl > 0 ? ' 报损'+tl : '';
     return `<div class="record-card" style="animation: fadeUp 0.3s ease both; animation-delay:${ri*0.04}s">
-      <div class="rc-date">${r.date} ${badge}${lt}</div>${ih}
+      <div class="rc-date">${r.date} ${badge}${lt}<button class="rc-del" onclick="deleteRecord('${r.date}')" title="删除此日记录">✕</button></div>${ih}
     </div>`;
   }).join('');
 }
@@ -1457,6 +1487,44 @@ function tgPromo(i) {
     }
   }
   refreshCard(i);
+}
+
+// ===== Edit Name, Reorder =====
+function editName(i) {
+  const newName = prompt('修改商品名：', products[i].name);
+  if (newName && newName.trim() && newName.trim() !== products[i].name) {
+    products[i].name = newName.trim();
+    saveProducts(products);
+    renderInven();
+    toast('✅ 已重命名');
+  }
+}
+function moveUp(i) {
+  if (i <= 0) return;
+  [products[i-1], products[i]] = [products[i], products[i-1]];
+  saveProducts(products); renderInven();
+}
+function moveDown(i) {
+  if (i >= products.length - 1) return;
+  [products[i], products[i+1]] = [products[i+1], products[i]];
+  saveProducts(products); renderInven();
+}
+
+// ===== Delete Record =====
+function deleteRecord(date) {
+  if (!confirm('删除 ' + date + ' 的记录？')) return;
+  let records = getRecords().filter(r => r.date !== date);
+  saveRecords(records);
+  renderRecords(); renderTrend();
+  toast('🗑️ 已删除');
+}
+
+// ===== Clear Search =====
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  searchTerm = '';
+  document.getElementById('searchClear').classList.remove('show');
+  renderInven();
 }
 
 function showAddModal() {
