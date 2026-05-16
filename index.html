@@ -1130,6 +1130,13 @@ function renderInven() {
   renderCount++;
   const list = document.getElementById('productList');
 
+  // Save "更多资料" open state before re-render
+  const moreOpen = new Set();
+  document.querySelectorAll('[id^="mb"]').forEach(el => {
+    const idx = parseInt(el.id.replace('mb', ''));
+    if (!isNaN(idx) && el.classList.contains('open')) moreOpen.add(idx);
+  });
+
   // Filter by search
   const displayList = searchTerm
     ? products.map((p,i) => ({p,i})).filter(x => x.p.name.includes(searchTerm))
@@ -1153,11 +1160,11 @@ function renderInven() {
       return `<div class="in-group"><div class="fl">${icon} ${label}</div>
         <div class="input-stepper">
           <button class="stepper-btn minus" onclick="adjust(${i},'${field}',-1)">−</button>
-          <input type="number" placeholder="数量" value="${v}" onchange="upd(${i},'${field}',this.value)" inputmode="numeric">
+          <input type="number" placeholder="数量" value="${v}" data-i="${i}" data-f="${field}" onchange="upd(${i},'${field}',this.value)" inputmode="numeric">
           <button class="stepper-btn plus" onclick="adjust(${i},'${field}',1)">+</button>
         </div></div>`;
     };
-    return `<div class="product-card ${pc}" ${anim}>
+    return `<div class="product-card ${pc}" data-i="${i}" ${anim}>
       ${pt}
       <div class="card-header">
         <span class="pname">${esc(p.name)}</span>
@@ -1169,7 +1176,7 @@ function renderInven() {
         ${st('晚上盘点','closing','🌙')}
         ${st('收银机销量','realSales','🧾')}
       </div>
-      <div class="res-row">
+      <div class="res-row" id="res${i}">
         <div class="res-item"><div class="rl">📊 应售</div><div class="rv">${c.shouldSell}</div></div>
         <div class="res-item"><div class="rl">${c.diff===0?'✅ 差异':'⚠️ 差异'}</div><div class="rv ${dc}">${dt}</div></div>
         ${c.loss>0?`<div class="res-item"><div class="rl">📦 报损</div><div class="rv terra">${c.loss}</div></div>`:''}
@@ -1180,7 +1187,7 @@ function renderInven() {
           <div class="in-group"><div class="fl">📦 报损数量</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjust(${i},'loss',-1)">−</button>
-              <input type="number" placeholder="坏的过期的" value="${p.loss}" onchange="upd(${i},'loss',this.value)" inputmode="numeric">
+              <input type="number" placeholder="坏的过期的" value="${p.loss}" data-i="${i}" data-f="loss" onchange="upd(${i},'loss',this.value)" inputmode="numeric">
               <button class="stepper-btn plus" onclick="adjust(${i},'loss',1)">+</button>
             </div></div>
           <div class="in-group"><div class="fl">⚠️ 原因</div>
@@ -1192,19 +1199,19 @@ function renderInven() {
           <div class="in-group"><div class="fl">📉 最低库存预警</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjust(${i},'minStock',-1)">−</button>
-              <input type="number" placeholder="低于这个数要补" value="${p.minStock}" onchange="upd(${i},'minStock',this.value)" inputmode="numeric">
+              <input type="number" placeholder="低于这个数要补" value="${p.minStock}" data-i="${i}" data-f="minStock" onchange="upd(${i},'minStock',this.value)" inputmode="numeric">
               <button class="stepper-btn plus" onclick="adjust(${i},'minStock',1)">+</button>
             </div></div>
           <div class="in-group"><div class="fl">💰 进货价</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjustPrice(${i},'costPrice',-1)">−</button>
-              <input type="number" placeholder="每件成本" value="${p.costPrice}" onchange="upd(${i},'costPrice',this.value)" inputmode="decimal">
+              <input type="number" placeholder="每件成本" value="${p.costPrice}" data-i="${i}" data-f="costPrice" onchange="upd(${i},'costPrice',this.value)" inputmode="decimal">
               <button class="stepper-btn plus" onclick="adjustPrice(${i},'costPrice',1)">+</button>
             </div></div>
           <div class="in-group"><div class="fl">🏷️ 零售价</div>
             <div class="input-stepper">
               <button class="stepper-btn minus" onclick="adjustPrice(${i},'sellPrice',-1)">−</button>
-              <input type="number" placeholder="每件售价" value="${p.sellPrice}" onchange="upd(${i},'sellPrice',this.value)" inputmode="decimal">
+              <input type="number" placeholder="每件售价" value="${p.sellPrice}" data-i="${i}" data-f="sellPrice" onchange="upd(${i},'sellPrice',this.value)" inputmode="decimal">
               <button class="stepper-btn plus" onclick="adjustPrice(${i},'sellPrice',1)">+</button>
             </div></div>
           <div class="in-group">
@@ -1217,6 +1224,15 @@ function renderInven() {
       </div>
     </div>`;
   }).join('');
+
+  // Restore "更多资料" open state
+  moreOpen.forEach(i => {
+    const el = document.getElementById('mb' + i);
+    const tg = document.getElementById('mt' + i);
+    if (el) el.classList.add('open');
+    if (tg) tg.textContent = '▲ 收起';
+  });
+
   updateAll();
 }
 
@@ -1341,24 +1357,89 @@ function doInherit() {
 }
 
 // ===== Operations =====
+function refreshCard(i) {
+  const p = products[i];
+  if (!p) return;
+  const c = calc(p);
+  const resRow = document.getElementById('res' + i);
+  if (!resRow) return;
+  const rvs = resRow.querySelectorAll('.rv');
+  if (rvs.length >= 2) {
+    rvs[0].textContent = c.shouldSell;
+    rvs[1].className = 'rv ' + (c.diff === 0 ? 'green' : 'red');
+    rvs[1].textContent = c.diff === 0 ? '✅ 对上了' : (c.diff > 0 ? '+' : '') + c.diff + '件';
+  }
+  // Show/hide loss item in result row
+  if (rvs.length === 2 && c.loss > 0) {
+    resRow.insertAdjacentHTML('beforeend', '<div class="res-item"><div class="rl">📦 报损</div><div class="rv terra">' + c.loss + '</div></div>');
+  } else if (rvs.length > 2 && c.loss === 0) {
+    const lossItem = resRow.querySelector('.res-item:last-child');
+    if (lossItem && lossItem.querySelector('.rl')?.textContent === '📦 报损') lossItem.remove();
+  }
+  updateAll();
+}
+
 function adjust(i, f, delta) {
   const cur = parseFloat(products[i][f]) || 0;
   products[i][f] = String(Math.max(0, cur + delta));
-  saveProducts(products); renderInven();
+  saveProducts(products);
+  // Update input value in DOM so it reflects immediately without re-render
+  const input = document.querySelector(`input[data-i="${i}"][data-f="${f}"]`);
+  if (input) input.value = products[i][f];
+  refreshCard(i);
 }
 function adjustPrice(i, f, delta) {
   const cur = parseFloat(products[i][f]) || 0;
   products[i][f] = String(Math.max(0, cur + delta));
-  saveProducts(products); renderInven();
+  saveProducts(products);
+  const input = document.querySelector(`input[data-i="${i}"][data-f="${f}"]`);
+  if (input) input.value = products[i][f];
+  refreshCard(i);
 }
-function upd(i, f, v) { products[i][f] = v; saveProducts(products); renderInven(); }
+function upd(i, f, v) { products[i][f] = v; saveProducts(products); refreshCard(i); }
 function delProd(i) { if (!confirm('删除「'+products[i].name+'」？')) return; products.splice(i,1); saveProducts(products); renderAll(true); toast('🗑️ 已删除'); }
 function tgMore(i) {
   const b = document.getElementById('mb'+i), t = document.getElementById('mt'+i);
   b.classList.toggle('open'); t.textContent = b.classList.contains('open') ? '▲ 收起' : '▼ 更多资料';
 }
-function setReason(i, r) { products[i].lossReason = products[i].lossReason === r ? '' : r; saveProducts(products); renderInven(); }
-function tgPromo(i) { products[i].isPromo = !products[i].isPromo; saveProducts(products); renderInven(); }
+function setReason(i, r) {
+  products[i].lossReason = products[i].lossReason === r ? '' : r;
+  saveProducts(products);
+  // Update chips in DOM without full re-render
+  const mb = document.getElementById('mb' + i);
+  if (mb) {
+    const map = { '过期':'spoil', '破损':'damage', '退货':'return' };
+    mb.querySelectorAll('.loss-chip').forEach(chip => {
+      chip.classList.toggle('sel', products[i].lossReason === map[chip.textContent.trim()]);
+    });
+  }
+  refreshCard(i);
+}
+function tgPromo(i) {
+  products[i].isPromo = !products[i].isPromo;
+  saveProducts(products);
+  // Update card DOM without full re-render
+  const card = document.querySelector(`.product-card[data-i="${i}"]`);
+  if (card) {
+    const tag = card.querySelector('.promo-tag');
+    const sw = card.querySelector('.promo-switch');
+    const swText = sw ? sw.querySelector('span:last-child') : null;
+    if (products[i].isPromo) {
+      card.classList.add('promo-card');
+      if (!tag && card.querySelector('.card-header')) {
+        card.querySelector('.card-header').insertAdjacentHTML('beforeend', '<span class="promo-tag">🔥 促销</span>');
+      }
+      if (sw) sw.classList.add('on');
+      if (swText) swText.textContent = '促销中';
+    } else {
+      card.classList.remove('promo-card');
+      if (tag) tag.remove();
+      if (sw) sw.classList.remove('on');
+      if (swText) swText.textContent = '未促销';
+    }
+  }
+  refreshCard(i);
+}
 
 function showAddModal() {
   document.getElementById('addModal').classList.add('show');
