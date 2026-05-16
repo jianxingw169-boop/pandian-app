@@ -847,9 +847,9 @@ body::before {
   </main>
 
   <nav class="bottom-nav">
-    <div class="nav-item active" data-tab="inven"><span class="nav-icon">📋</span>盘点</div>
-    <div class="nav-item" data-tab="records"><span class="nav-icon">📅</span>记录</div>
-    <div class="nav-item" data-tab="settings"><span class="nav-icon">⚙️</span>设置</div>
+    <div class="nav-item active" data-tab="inven" onclick="switchTab('inven')"><span class="nav-icon">📋</span>盘点</div>
+    <div class="nav-item" data-tab="records" onclick="switchTab('records')"><span class="nav-icon">📅</span>记录</div>
+    <div class="nav-item" data-tab="settings" onclick="switchTab('settings')"><span class="nav-icon">⚙️</span>设置</div>
   </nav>
 </div>
 
@@ -933,22 +933,52 @@ function today() {
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function money(n) { return '¥' + (Math.round(parseFloat(n)||0)).toLocaleString(); }
 
-// ===== Init =====
-const td = today();
-document.getElementById('todayDate').textContent = td;
-let products = getProducts();
-if (!products.length) {
-  products = [
-    { name:'🍪 旺旺雪饼', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
-    { name:'🍫 德芙巧克力', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
-    { name:'🥜 洽洽瓜子', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
-    { name:'🍭 阿尔卑斯糖', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
-  ];
-  saveProducts(products);
+// ===== Tab Navigation (defined early so inline onclick works even if init fails) =====
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if (navItem) navItem.classList.add('active');
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  const target = tab === 'inven' ? 'tabInven' : tab === 'records' ? 'tabRecords' : 'tabSettings';
+  const page = document.getElementById(target);
+  if (!page) return;
+  page.classList.add('active');
+  const pc = page.querySelector('.page-content');
+  if (pc) {
+    pc.style.animation = 'none';
+    void pc.offsetHeight;
+    pc.style.animation = '';
+  }
+  if (tab === 'records') { renderRecords(); renderTrend(); }
+  const ca = document.getElementById('contentArea');
+  if (ca) ca.scrollTop = 0;
 }
 
-if (!localStorage.getItem('guide_seen')) {
-  setTimeout(() => { document.getElementById('guideOverlay').classList.add('show'); }, 400);
+// ===== Init =====
+let td;
+try {
+  td = today();
+  document.getElementById('todayDate').textContent = td;
+  let products_ = getProducts();
+  if (!products_.length) {
+    products_ = [
+      { name:'🍪 旺旺雪饼', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
+      { name:'🍫 德芙巧克力', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
+      { name:'🥜 洽洽瓜子', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
+      { name:'🍭 阿尔卑斯糖', opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' },
+    ];
+    saveProducts(products_);
+  }
+  products = products_;
+
+  if (!localStorage.getItem('guide_seen')) {
+    setTimeout(() => { document.getElementById('guideOverlay').classList.add('show'); }, 400);
+  }
+
+  renderAll();
+  checkAutoInherit();
+} catch(e) {
+  console.error('初始化出错:', e);
 }
 
 // ===== Search =====
@@ -966,30 +996,6 @@ function setTrend(d) {
   document.getElementById('trend30').classList.toggle('active', d===30);
   renderTrend();
 }
-
-renderAll();
-checkAutoInherit();
-
-// ===== Tab Navigation =====
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.addEventListener('click', function() {
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    this.classList.add('active');
-    const tab = this.dataset.tab;
-    document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-    const target = tab === 'inven' ? 'tabInven' : tab === 'records' ? 'tabRecords' : 'tabSettings';
-    const page = document.getElementById(target);
-    page.classList.add('active');
-    const pc = page.querySelector('.page-content');
-    if (pc) {
-      pc.style.animation = 'none';
-      void pc.offsetHeight;
-      pc.style.animation = '';
-    }
-    if (tab === 'records') { renderRecords(); renderTrend(); }
-    document.getElementById('contentArea').scrollTop = 0;
-  });
-});
 
 // ===== Calculations =====
 function calc(p) {
