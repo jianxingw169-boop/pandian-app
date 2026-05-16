@@ -629,7 +629,8 @@ body::before {
   font-size: 16px; margin-bottom: 16px; background: var(--cream-light);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.modal-inner input[type="text"]:focus {
+.modal-inner input[type="text"]:focus,
+.modal-inner textarea:focus {
   border-color: var(--terra); outline: none;
   box-shadow: 0 0 0 3px var(--terra-glow);
 }
@@ -776,6 +777,7 @@ body::before {
           </div>
           <div class="action-sub">
             <button class="btn btn-outline btn-sm" onclick="loadYesterday()">📋 继承昨日</button>
+            <button class="btn btn-outline btn-sm" onclick="showBatchModal()">📋 批量添加</button>
             <button class="btn btn-outline btn-sm" onclick="clearAll()">🔄 重置</button>
           </div>
         </div>
@@ -861,6 +863,22 @@ body::before {
     <div class="btn-row2">
       <button class="btn btn-outline" onclick="hideAddModal()" style="flex:1;">取消</button>
       <button class="btn btn-primary" onclick="addProduct()" style="flex:2;">确定添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Batch Add Modal ===== -->
+<div class="modal" id="batchModal">
+  <div class="modal-inner">
+    <h3>📋 批量添加</h3>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:12px;">每行一个商品名，一次加多个</p>
+    <textarea id="batchNames" placeholder="旺旺雪饼
+德芙巧克力
+洽洽瓜子
+..." style="width:100%;padding:12px 14px;border:1.5px solid var(--card-border);border-radius:var(--radius-sm);font-size:16px;background:var(--cream-light);color:var(--text);resize:vertical;min-height:120px;font-family:inherit;transition:border-color 0.2s;box-sizing:border-box;" autocomplete="off"></textarea>
+    <div class="btn-row2" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="hideBatchModal()" style="flex:1;">取消</button>
+      <button class="btn btn-primary" onclick="batchAdd()" style="flex:2;">添加 (0 个)</button>
     </div>
   </div>
 </div>
@@ -1455,6 +1473,42 @@ function addProduct() {
 }
 document.getElementById('newName').addEventListener('keydown', function(e) { if (e.key === 'Enter') addProduct(); });
 
+// ===== Batch Add =====
+let batchTimer;
+document.getElementById('batchNames').addEventListener('input', function() {
+  clearTimeout(batchTimer);
+  batchTimer = setTimeout(updateBatchBtn, 150);
+});
+function updateBatchBtn() {
+  const ta = document.getElementById('batchNames');
+  const names = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+  const btn = document.querySelector('#batchModal .btn-row2 .btn-primary');
+  if (btn) btn.textContent = '添加 (' + names.length + ' 个)';
+}
+function showBatchModal() {
+  document.getElementById('batchModal').classList.add('show');
+  const ta = document.getElementById('batchNames');
+  ta.value = '';
+  updateBatchBtn();
+  setTimeout(() => ta.focus(), 300);
+}
+function hideBatchModal() { document.getElementById('batchModal').classList.remove('show'); }
+function batchAdd() {
+  const ta = document.getElementById('batchNames');
+  const names = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!names.length) { toast('请输入商品名'); return; }
+  let added = 0;
+  names.forEach(name => {
+    if (!products.some(p => p.name === name)) {
+      products.push({ name, opening:'', received:'', closing:'', realSales:'', loss:'', lossReason:'', minStock:'', isPromo:false, costPrice:'', sellPrice:'' });
+      added++;
+    }
+  });
+  if (!added) { toast('这些商品都已存在'); hideBatchModal(); return; }
+  saveProducts(products); hideBatchModal(); renderAll(true); toast('✅ 批量添加了 ' + added + ' 个商品');
+}
+
+
 function saveToday() {
   if (!products.some(p => p.opening !== '' || p.closing !== '' || p.realSales !== '')) { toast('先填几个数吧 😊'); return; }
   const items = products.map(p => {
@@ -1542,6 +1596,7 @@ function toast(msg) {
 }
 document.getElementById('addModal').addEventListener('click', function(e) { if (e.target===this) hideAddModal(); });
 document.getElementById('exportModal').addEventListener('click', function(e) { if (e.target===this) hideExportModal(); });
+document.getElementById('batchModal').addEventListener('click', function(e) { if (e.target===this) hideBatchModal(); });
 </script>
 </body>
 </html>
