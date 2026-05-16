@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>食品柜盘点 — 使用教程</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #FFF8F0; color: #2D3436; font-size: 17px;
+  max-width: 500px; margin: 0 auto; padding: 0 16px 40px;
+}
+h1 { text-align: center; font-size: 22px; color: #FF7E67; padding: 24px 0 4px; }
+.subtitle { text-align: center; font-size: 14px; color: #999; margin-bottom: 20px; }
+h2 { font-size: 18px; color: #FF7E67; margin: 20px 0 8px; padding-left: 4px; border-left: 3px solid #FF7E67; padding-left: 10px; }
+h3 { font-size: 16px; margin: 14px 0 6px; color: #555; }
+p { font-size: 15px; line-height: 1.7; margin-bottom: 6px; color: #444; }
+.card {
+  background: #fff; border-radius: 12px; padding: 14px 16px;
+  margin: 10px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border: 1px solid #f0e8e0;
+}
+.step { display: flex; gap: 8px; margin: 8px 0; align-items: flex-start; }
+.step-num {
+  width: 28px; height: 28px; background: #FF7E67; color: #fff;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+}
+.step-text { flex: 1; font-size: 15px; line-height: 1.6; color: #444; }
+.step-text strong { color: #2D3436; }
+.tag {
+  display: inline-block; padding: 2px 10px; border-radius: 10px;
+  font-size: 13px; margin: 0 2px;
+}
+.tag-orange { background: #FFF3E0; color: #E67E22; }
+.tag-green { background: #E8F8F5; color: #00B894; }
+.tag-red { background: #FFF0F0; color: #FF6B6B; }
+.tag-blue { background: #EEF2FF; color: #5B7FFF; }
+.url-box {
+  background: #f5f5f5; border-radius: 8px; padding: 10px 12px;
+  font-family: monospace; font-size: 14px; word-break: break-all;
+  margin: 6px 0; color: #FF7E67;
+}
+.btn { display: block; background: #FF7E67; color: #fff; text-align: center;
+  padding: 12px; border-radius: 10px; font-size: 16px; font-weight: 600;
+  text-decoration: none; margin: 16px 0; }
+hr { border: none; border-top: 1px solid #f0e8e0; margin: 16px 0; }
+ul, ol { margin: 4px 0 8px; padding-left: 20px; font-size: 15px; line-height: 1.7; color: #444; }
+li { margin-bottom: 2px; }
+.screenshot {
+  background: #FFF8F0; border: 2px dashed #f0e8e0; border-radius: 8px;
+  padding: 20px; text-align: center; font-size: 13px; color: #bbb; margin: 8px 0;
+}
+.table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+.table td, .table th {
+  border: 1px solid #f0e8e0; padding: 6px 10px; text-align: left;
+}
+.table th { background: #FFFAF7; color: #888; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>🥜 食品柜盘点</h1>
+<p class="subtitle">使用教程 — 每天怎么用</p>
+
+<div class="url-box">https://jianxingw169-boop.github.io/pandian-app/</div>
+<a class="btn" href="https://jianxingw169-boop.github.io/pandian-app/">打开 App</a>
+
+<hr>
+
+<h2>📱 怎么用这个 App</h2>
+
+<div class="card">
+  <p><b>第一步：</b>点上面那个链接，右上角三个点 → <b>「用浏览器打开」</b></p>
+  <p><b>第二步：</b>添加到手机桌面，以后像真 App 一样用：</p>
+  <ul>
+    <li>安卓：浏览器点 ⋮ → 「添加到主屏幕」</li>
+    <li>iPhone：点底部分享 → 「添加到主屏幕」</li>
+  </ul>
+</div>
+
+<hr>
+
+<h2>📋 每天怎么做（四步）</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-text">
+    <strong>🌅 早上 — 填早上库存</strong><br>
+    打开 App，顶部有橙色条 <span class="tag tag-orange">📦 要用昨晚的库存吗？</span> 点 <b>「好的」</b> 就行，不用手填。<br>
+    没出现就点下面 <span class="tag tag-blue">📋 继承昨日</span> 按钮。
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-text">
+    <strong>🚚 白天 — 来货了填进货</strong><br>
+    供货商送货来了，找到商品填「今日进货」。没进货就不管。
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-text">
+    <strong>🌙 晚上 — 盘点 + 报损</strong><br>
+    ① 数库存，填「晚上盘点」<br>
+    ② 看 POS 机，填「收银机销量」<br>
+    ③ 有坏的过期的，点卡片 <span class="tag tag-orange">▼ 更多资料</span> 填报损<br><br>
+    填完自动显示：<span class="tag tag-green">✅ 对上了</span> 或 <span class="tag tag-red">⚠️ 有差异</span>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-text">
+    <strong>💾 保存</strong><br>
+    点 <span class="tag tag-green">💾 保存今天</span>，明天打开自动继承。
+  </div>
+</div>
+
+<hr>
+
+<h2>🏷️ 更多功能（点「▼ 更多资料」）</h2>
+
+<div class="card">
+  <p><b>📦 报损</b> — 过期、破损、退货的数量，选个原因</p>
+  <p><b>📉 最低库存预警</b> — 设个数（比如5），库存低于5时提醒补货</p>
+  <p><b>🔥 今日促销</b> — 打开开关，商品卡片加橙色边框，一眼看到</p>
+</div>
+
+<hr>
+
+<h2>📅 看历史记录</h2>
+
+<p>点底部 <b>「📅 记录」</b>。可以筛选：全部 / ✅ 对上了 / ⚠️ 有差异</p>
+
+<hr>
+
+<h2>⚙️ 设置</h2>
+
+<div class="card">
+  <p><b>📤 分享对账结果</b> — 生成报告，复制到微信发给别人</p>
+  <p><b>💾 导出备份</b> — 换手机时用</p>
+  <p><b>📱 添加到桌面</b> — 教你怎么添加到桌面</p>
+</div>
+
+<hr>
+
+<h2>❓ 常见问题</h2>
+
+<div class="card">
+  <p><b>早上忘了填库存？</b><br>点「📋 继承昨日」就行（昨晚保存过的话）</p>
+  <p><b>数字填错了？</b><br>直接改，结果自动重新算</p>
+  <p><b>应售跟我想的不一样？</b><br>公式：早上库存 + 进货 - 晚上盘点 - 报损，看看报损填了没</p>
+  <p><b>怎么删商品？</b><br>点商品卡片右上角 ✕ 按钮</p>
+  <p><b>换手机了怎么办？</b><br>旧手机 ⚙️ → 导出备份，发到自己微信</p>
+</div>
+
+<hr>
+
+<p style="text-align:center;color:#ccc;font-size:13px;padding:16px 0;">版本 2.0 · 2026-05-16</p>
+
+</body>
+</html>
